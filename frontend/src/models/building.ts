@@ -51,20 +51,8 @@ export class BuildingObject implements PlatformClass, Area, Image {
     }
   }
 
-  draw() {
-    const length = this.name.length * 30;
-    const heightPadding = 20;
-    const size = 40;
+  drawWindow() {
     if (!!ctx) {
-      /* building */
-      ctx.fillStyle = this.color;
-      ctx.fillRect(
-        this.position.x,
-        this.position.y - this.height,
-        this.width,
-        this.height
-      );
-      /* window */
       ctx.fillStyle = "#0056ff55";
       ctx.fillRect(
         this.position.x + 50,
@@ -79,7 +67,11 @@ export class BuildingObject implements PlatformClass, Area, Image {
         100,
         100
       );
-      /* door */
+    }
+  }
+
+  drawDoor() {
+    if (!!ctx) {
       ctx.fillStyle = "#855523";
       ctx.fillRect(
         this.position.x + this.width / 2 - 100 / 2,
@@ -87,24 +79,31 @@ export class BuildingObject implements PlatformClass, Area, Image {
         100,
         150
       );
-      /* kanban */
-      ctx.fillStyle = "#ffffff56";
-      ctx.fillRect(
-        this.position.x + this.width / 2 - length / 2,
-        this.position.y - this.height - size - heightPadding,
-        length,
-        size + heightPadding
-      );
-      /* kanban outline */
-      ctx.strokeStyle = "#ffffff";
-      ctx.strokeRect(
-        this.position.x + this.width / 2 - length / 2,
-        this.position.y - this.height - size - heightPadding,
-        length,
-        size + heightPadding
-      );
+    }
+  }
+
+  drawKanban() {
+    const length = this.name.length * 30;
+    const heightPadding = 20;
+    const size = 40;
+    if (!!ctx) {
+      // ctx.fillStyle = "#ffffff56";
+      // ctx.fillRect(
+      //   this.position.x + this.width / 2 - length / 2,
+      //   this.position.y - this.height - size - heightPadding,
+      //   length,
+      //   size + heightPadding
+      // );
+      // /* kanban outline */
+      // ctx.strokeStyle = "#ffffff";
+      // ctx.strokeRect(
+      //   this.position.x + this.width / 2 - length / 2,
+      //   this.position.y - this.height - size - heightPadding,
+      //   length,
+      //   size + heightPadding
+      // );
       /* building name */
-      ctx.fillStyle = "#000000";
+      ctx.fillStyle = "#ffffff";
       ctx.font = "bold 20px Arial";
       ctx.textAlign = "center";
       ctx.fillText(
@@ -113,5 +112,32 @@ export class BuildingObject implements PlatformClass, Area, Image {
         this.position.y - this.height - 20
       );
     }
+  }
+
+  draw() {
+    if (!!ctx) {
+      /* building */
+      ctx.fillStyle = this.color;
+      ctx.fillRect(
+        this.position.x,
+        this.position.y - this.height,
+        this.width,
+        this.height
+      );
+      /* window */
+      // this.drawWindow();
+      /* door */
+      this.drawDoor();
+      /* kanban */
+      this.drawKanban();
+    }
+  }
+
+  moveHorizontally(value: number) {
+    this.position.x = this.position.x + value;
+  }
+
+  moveVertical(value: number) {
+    this.position.y = this.position.y + value;
   }
 }

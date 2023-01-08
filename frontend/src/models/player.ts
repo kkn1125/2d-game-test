@@ -1,11 +1,11 @@
 import { canvas, ctx, pointer } from "../util/globals";
-import { Area, Axis, PlayerClass } from "./base";
+import { Area, Axis, BaseUnit, PlayerClass, UnitInfo } from "./base";
 import { BuildingObject } from "./building";
 import { PlayerEquipment } from "./equipments";
 import { BottomItem, FootItem, HeadItem, Item, TopItem } from "./items";
 import { Stats } from "./stats";
 
-export class Player implements PlayerClass, Area {
+export class Player extends BaseUnit implements UnitInfo, PlayerClass, Area {
   equipment: PlayerEquipment = new PlayerEquipment(
     new HeadItem(
       {
@@ -49,13 +49,42 @@ export class Player implements PlayerClass, Area {
   velocity: Axis;
   width: number;
   height: number;
-  speed: number = 5;
+  // speed: number = 5;
   jumpped: boolean = false;
   building: BuildingObject | undefined;
+  stats: Stats = new Stats({ str: 5, dex: 2, int: 1, lux: 2, speed: 15 });
+
+  infoBarSize: {
+    width: number;
+    height: number;
+  } = {
+    width: 100,
+    height: 20,
+  };
+
+  health: number = 100;
+  mana: number = 20;
+
+  maxHealth: number = 100;
+  maxMana: number = 20;
 
   inventory: Inventory = new Inventory(5, 6, 50);
 
-  constructor() {
+  constructor(name?: string, health?: number, mana?: number) {
+    console.log(name);
+    super(
+      name || "Player",
+      {
+        x: 100,
+        y: 100,
+      },
+      {
+        x: 0,
+        y: 0,
+      },
+      30,
+      30
+    );
     this.position = {
       x: 100,
       y: 100,
@@ -69,44 +98,25 @@ export class Player implements PlayerClass, Area {
 
     this.updateUserStats();
     console.log(this.equipment.foot.item.stats.speed);
+
+    this.infoBarSize.width = 50;
+    this.infoBarSize.height = 5;
+    health && (this.health = health);
+    mana && (this.mana = mana);
+    health && (this.maxHealth = health);
+    mana && (this.maxMana = mana);
   }
 
   updateUserStats() {
     if (this.equipment.foot.equiped) {
       if (this.equipment.foot.item.stats.speed) {
-        this.speed += this.equipment.foot.item.stats.speed;
+        this.stats.speed += this.equipment.foot.item.stats.speed;
       }
     }
   }
 
   frontOfBuilding(building: BuildingObject) {
     this.building = building;
-  }
-
-  jump() {
-    this.velocity.y -= 20;
-    this.jumpped = true;
-  }
-
-  draw() {
-    if (!!ctx) {
-      ctx.fillStyle = "red";
-      ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
-    }
-  }
-
-  update() {
-    this.draw();
-    this.position.x += this.velocity.x;
-    this.position.y += this.velocity.y;
-
-    /* gravity setting */
-    if (this.position.y + this.height + this.velocity.y <= canvas.height) {
-      this.velocity.y += this.gravity;
-    }
-    //  else {
-    //   this.velocity.y = 0;
-    // }
   }
 }
 

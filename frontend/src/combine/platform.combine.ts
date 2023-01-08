@@ -1,6 +1,8 @@
 import { Axis } from "../models/base";
+import { Monster } from "../models/monster";
 import { Platform } from "../models/platform";
 import { Player } from "../models/player";
+import { MonsterCombine } from "./monster.combine";
 
 export class PlatFormCombine {
   imageSource?: HTMLImageElement;
@@ -32,21 +34,25 @@ export class PlatFormCombine {
   }
   moveHorizontally(value: number) {
     this.platforms.forEach((platform) => platform.moveHorizontally(value));
-    // this.position.x = this.position.x + value;
   }
 
   moveVertical(value: number) {
     this.platforms.forEach((platform) => platform.moveVertical(value));
-    // this.position.y = this.position.y + value;
   }
   draw() {
-    console.log(this.platforms);
     this.platforms.forEach((platform) => platform.draw());
   }
   clear() {
     this.platforms = [];
   }
-  collision(player: Player) {
-    this.platforms.forEach((platform) => platform.collision(player));
+  collision(units: (Player | MonsterCombine)[]) {
+    // console.log(units);
+    this.platforms.forEach((platform) =>
+      units.forEach((unit) =>
+        unit instanceof MonsterCombine
+          ? unit.monsters.forEach((u) => platform.collision(u))
+          : platform.collision(unit)
+      )
+    );
   }
 }

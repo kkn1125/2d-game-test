@@ -1,5 +1,5 @@
 import { ctx } from "../util/globals";
-import { Area, Axis, Image } from "./base";
+import { Area, Axis, BaseUnit, Image } from "./base";
 import { Player } from "./player";
 
 export interface PlatformClass {
@@ -8,9 +8,9 @@ export interface PlatformClass {
 
 export class Platform implements PlatformClass, Area, Image {
   position: Axis;
-  width: number;
-  height: number;
-  image: HTMLImageElement;
+  width!: number;
+  height!: number;
+  image?: HTMLImageElement | Area;
 
   constructor({ x, y, image }: Axis & Image) {
     this.position = {
@@ -18,9 +18,14 @@ export class Platform implements PlatformClass, Area, Image {
       y: y,
     };
 
-    this.image = image;
-    this.width = image.width;
-    this.height = image.height;
+    if (image instanceof HTMLImageElement) {
+      this.image = image;
+      this.width = image.width;
+      this.height = image.height;
+    } else if (image) {
+      this.width = image.width;
+      this.height = image.height;
+    }
   }
 
   moveHorizontally(value: number) {
@@ -35,11 +40,21 @@ export class Platform implements PlatformClass, Area, Image {
     if (!!ctx) {
       // ctx.fillStyle = "blue";
       // ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
-      ctx.drawImage(this.image, this.position.x, this.position.y);
+      if (this.image instanceof HTMLImageElement) {
+        ctx.drawImage(this.image, this.position.x, this.position.y);
+      } else {
+        ctx.fillRect(this.position.x, this.position.y, 200, 300);
+      }
     }
   }
 
-  collision(player: Player) {
+  collision(player: BaseUnit) {
+    if (player.name === "slime") {
+      // console.log(player.name, player.velocity.y);
+      
+    } else {
+      // console.log(player.name, player.velocity.y)
+    }
     if (
       player.position.y + player.height <= this.position.y &&
       player.position.y + player.height + player.velocity.y >=

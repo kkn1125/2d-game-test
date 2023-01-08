@@ -10,8 +10,14 @@ export class Stats implements StatsType {
   dex: number = 1;
   int: number = 1;
   lux: number = 1;
-  speed?: number = 0;
-  constructor({ str, dex, int, lux, speed }: StatsType) {
+  speed: number = 0;
+  constructor(stats?: StatsType) {
+    const { str, dex, int, lux, speed } = stats || {
+      str: 1,
+      dex: 1,
+      int: 1,
+      lux: 1,
+    };
     this.str = str;
     this.dex = dex;
     this.int = int;

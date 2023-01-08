@@ -1,10 +1,13 @@
+import { BuildingCombine } from "./combine/building.combine";
 import { GenericObjectsCombine } from "./combine/generic.combine";
+import { MonsterCombine } from "./combine/monster.combine";
 import { PlatFormCombine } from "./combine/platform.combine";
 import { BuildingObject } from "./models/building";
 import { GenericObject } from "./models/generic";
+import { Monster } from "./models/monster";
 import { Platform } from "./models/platform";
 import { Player } from "./models/player";
-import { canvas, ctx } from "./util/globals";
+import { canvas, ctx, keys, scrollOptions } from "./util/globals";
 import background from "/images/background.png?url";
 import platform from "/images/platform.png?url";
 import rock from "/images/rock.png?url";
@@ -22,30 +25,23 @@ function createImage(imageSrc: string, width?: number, height?: number) {
 }
 
 let player = new Player();
+// let monster = new Monster("slime", { x: 300, y: 0 }, 20, 50, 0);
 let platformImage = createImage(platform);
 let backgroundImage = createImage(background);
 let rockImage = createImage(rock);
 
+scrollOptions.windowLeftLimit = canvas.width / 4;
+scrollOptions.windowRightLimit = canvas.width - canvas.width / 4;
+
 const platforms = new PlatFormCombine();
 const generics = new GenericObjectsCombine();
-let buildingObjects: BuildingObject[] = [];
+const buildings = new BuildingCombine();
+const monsters = new MonsterCombine();
 
-const keys = {
-  right: {
-    pressed: false,
-  },
-  left: {
-    pressed: false,
-  },
-  up: {
-    pressed: false,
-  },
-};
-
-let scrollOffset = 0;
+scrollOptions.scrollOffset = 0;
 
 function enterBuilding(buildingInfo: BuildingObject) {
-  player = new Player();
+  player = new Player("Player1");
   platformImage = createImage(platform);
   backgroundImage = createImage(storeBackground);
   // rockImage = createImage(rock);
@@ -57,13 +53,15 @@ function enterBuilding(buildingInfo: BuildingObject) {
       image: backgroundImage,
     },
   ]);
-  buildingObjects = [];
+  buildings.clear();
 
-  scrollOffset = 0;
+  scrollOptions.scrollOffset = 0;
 }
 
 function init() {
-  player = new Player();
+  player = new Player("Player1");
+  monsters.add(new Monster("slime", { x: 300, y: 0 }, 20, 50, 0));
+  // monster = new Monster("slime", { x: 300, y: 0 }, 20, 50, 0);
   platformImage = createImage(platform);
   backgroundImage = createImage(background);
   rockImage = createImage(rock);
@@ -97,34 +95,27 @@ function init() {
       y: 0,
       image: backgroundImage,
     },
-    {
-      x: rockImage.width * 4,
-      y: 576 - rockImage.height,
-      image: rockImage,
-    },
-    {
-      x: rockImage.width * 2,
-      y: 576 - rockImage.height + 150,
-      image: rockImage,
-    },
-    {
-      x: rockImage.width * 0,
-      y: 576 - rockImage.height,
-      image: rockImage,
-    },
   ]);
   generics.add([
     { x: 0, y: 0, image: backgroundImage },
-    { x: rockImage.width * 4, y: 576 - rockImage.height, image: rockImage },
+    {
+      x: rockImage.width * 4,
+      y: 576 - rockImage.height,
+      image: { width: rockImage.width, height: rockImage.height },
+    },
     {
       x: rockImage.width * 2,
       y: 576 - rockImage.height + 150,
-      image: rockImage,
+      image: { width: rockImage.width, height: rockImage.height },
     },
-    { x: rockImage.width * 0, y: 576 - rockImage.height, image: rockImage },
+    {
+      x: rockImage.width * 0.5,
+      y: 576 - rockImage.height,
+      image: { width: rockImage.width, height: rockImage.height },
+    },
   ]);
 
-  buildingObjects = [
+  buildings.add([
     new BuildingObject({
       name: "account",
       width: 500,
@@ -147,9 +138,9 @@ function init() {
       },
       color: "yellow",
     }),
-  ];
+  ]);
 
-  scrollOffset = 0;
+  scrollOptions.scrollOffset = 0;
 }
 
 function animate(time: number) {
@@ -161,77 +152,61 @@ function animate(time: number) {
   }
 
   generics.draw();
-  buildingObjects.forEach((building) => building.draw());
-  console.log(platforms);
+  buildings.draw();
+  // console.log(platforms);
   platforms.draw();
   player.update();
+  monsters.update();
+  monsters.aiMove(time);
+  // monsters.draw();
+
+  // attack collision
+  monsters.detect(player);
 
   if (!player.jumpped && !player.building && keys.up.pressed) {
     player.jump();
   }
-
-  if (keys.right.pressed && player.position.x < 400) {
-    player.velocity.x = player.speed;
-  } else if (
-    (keys.left.pressed && player.position.x > 100) ||
-    (keys.left.pressed && scrollOffset === 0 && player.position.x > 0)
+  monsters.boundaryCollision();
+  // console.log(scrollOptions.scrollOffset < scrollOptions.mapEnd);
+  if (
+    keys.right.pressed &&
+    player.position.x < scrollOptions.windowRightLimit
   ) {
-    player.velocity.x = -player.speed;
+    player.velocity.x = player.stats.speed;
+  } else if (
+    (keys.left.pressed && player.position.x > scrollOptions.windowLeftLimit) ||
+    (keys.left.pressed &&
+      scrollOptions.scrollOffset === 0 &&
+      player.position.x > 0 &&
+      player.position.x)
+  ) {
+    player.velocity.x = -player.stats.speed;
   } else {
     player.velocity.x = 0;
 
-    if (keys.right.pressed) {
-      scrollOffset += player.speed;
-      platforms.moveHorizontally(-player.speed);
-      buildingObjects.forEach((building) => {
-        building.position.x -= player.speed;
-      });
-      generics.moveHorizontally(-player.speed * 0.66);
-    } else if (keys.left.pressed && scrollOffset > 0) {
-      scrollOffset -= player.speed;
-      platforms.moveHorizontally(player.speed);
-
-      buildingObjects.forEach((building) => {
-        building.position.x += player.speed;
-      });
-      generics.moveHorizontally(player.speed * 0.66);
+    if (
+      keys.right.pressed &&
+      // 실제적으로 맵 바운더리를 나타내는 부분
+      scrollOptions.scrollOffset < scrollOptions.mapEnd
+    ) {
+      scrollOptions.scrollOffset += player.stats.speed;
+      platforms.moveHorizontally(-player.stats.speed);
+      buildings.moveHorizontally(-player.stats.speed);
+      generics.moveHorizontally(-player.stats.speed * 0.66);
+      monsters.moveHorizontally(-player.stats.speed);
+    } else if (keys.left.pressed && scrollOptions.scrollOffset > 0) {
+      scrollOptions.scrollOffset -= player.stats.speed;
+      platforms.moveHorizontally(player.stats.speed);
+      buildings.moveHorizontally(player.stats.speed);
+      generics.moveHorizontally(player.stats.speed * 0.66);
+      monsters.moveHorizontally(player.stats.speed);
     }
   }
 
-  platforms.collision(player);
+  platforms.collision([player, monsters]);
+  buildings.frontOfDoor(time, player, enterBuilding);
 
-  buildingObjects.forEach((building) => {
-    if (
-      player.position.x + player.width >=
-        building.position.x + building.width / 2 - 50 &&
-      player.position.x < building.position.x + building.width / 2 + 50
-    ) {
-      building.marker(time);
-      if (keys.up.pressed) {
-        player.frontOfBuilding(building);
-        if (confirm(`"${building.name}"에 입장하시겠습니까?`)) {
-          enterBuilding(building);
-          player.building = undefined;
-          player.velocity.y = 0;
-          player.velocity.x = 0;
-          player.jumpped = false;
-          keys.up.pressed = false;
-          keys.left.pressed = false;
-          keys.right.pressed = false;
-        } else {
-          player.velocity.y = 0;
-          player.velocity.x = 0;
-          player.jumpped = false;
-          keys.up.pressed = false;
-          keys.left.pressed = false;
-          keys.right.pressed = false;
-        }
-        player.building = undefined;
-      }
-    }
-  });
-
-  if (scrollOffset > 2000) {
+  if (scrollOptions.scrollOffset > scrollOptions.mapEnd) {
     console.log("you win");
   }
 
@@ -248,7 +223,7 @@ requestAnimationFrame(animate);
 
 addEventListener("keydown", (e) => {
   const { key } = e;
-  console.log(key);
+  // console.log(key);
   switch (key.toLowerCase()) {
     case "a":
       keys.left.pressed = true;
@@ -262,7 +237,6 @@ addEventListener("keydown", (e) => {
       keys.up.pressed = true;
       break;
     case "e":
-      // keys.up.pressed = true;
       player.inventory.open();
       break;
   }

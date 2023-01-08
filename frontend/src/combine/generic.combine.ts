@@ -29,7 +29,7 @@ export class GenericObjectsCombine {
     // this.position.y = this.position.y + value;
   }
   draw() {
-    console.log(this.generic);
+    // console.log(this.generic);
     this.generic.forEach((generic) => generic.draw());
   }
   clear() {
