@@ -3,9 +3,7 @@ import { GenericObjectsCombine } from "./combine/generic.combine";
 import { MonsterCombine } from "./combine/monster.combine";
 import { PlatFormCombine } from "./combine/platform.combine";
 import { BuildingObject } from "./models/building";
-import { GenericObject } from "./models/generic";
 import { Monster } from "./models/monster";
-import { Platform } from "./models/platform";
 import { Player } from "./models/player";
 import { canvas, ctx, keys, scrollOptions } from "./util/globals";
 import background from "/images/background.png?url";
@@ -261,4 +259,5 @@ addEventListener("keyup", (e) => {
   }
 });
 
-export {};
+export { };
+
