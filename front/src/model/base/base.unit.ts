@@ -1,4 +1,5 @@
 import { ctx } from "../../util/global";
+import { Base } from "./base";
 import { Stat } from "./base.stat";
 
 export interface Keys {
@@ -10,7 +11,7 @@ export interface Keys {
   e: boolean;
 }
 
-export class BaseUnit implements UnitProperty, UnitMethod {
+export class BaseUnit extends Base implements UnitProperty, UnitMethod {
   name: string = "noname";
   velocity: Velocity = {
     x: 0,
@@ -31,6 +32,7 @@ export class BaseUnit implements UnitProperty, UnitMethod {
   scrollOffset: number = 0;
   jumpped: boolean = false;
   constructor(name: string, hpmp: HpMp, position: Position, size: Size) {
+    super();
     name && (this.name = name);
     position && (this.position = position);
     size && (this.size = size);
