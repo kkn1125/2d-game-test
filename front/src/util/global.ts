@@ -1,9 +1,7 @@
 import { Base } from "../model/base/base";
 
-export const canvas = document.querySelector("canvas");
-export const ctx = (canvas as HTMLCanvasElement).getContext(
-  "2d"
-) as CanvasRenderingContext2D;
+export const canvas = document.querySelector("canvas") as HTMLCanvasElement;
+export const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
 export const STATIC_VAR = {
   INIT_NAME: "noname",

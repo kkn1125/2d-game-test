@@ -31,7 +31,7 @@ declare interface BaseOption {
   position: Position;
 }
 declare interface BaseMethod {
-  draw: () => void;
+  draw: (time: number) => void;
   offset: () => void;
 }
 
